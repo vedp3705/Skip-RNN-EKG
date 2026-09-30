@@ -22,12 +22,12 @@ QUALITY_SUBTYPE_DECODE = {
 }
 
 def _is_bad(letter: str) -> bool:
-    # keep merely-noisy beats (still expert-labeled); drop only unreadable 'u'
+    # keep noisy beats (still expert labeled); drop only unreadable 'u'
     return letter in ("u",)
 
 def build_quality_masks(ann, n_samples: int, n_channels: int = 2, u_pad_s: float = 0.5, fs_hint: float = 360):
     # Build one keep/drop mask per channel from the wfdb quality annotations.
-    # True = keep, False = drop. '~' marks quality-change intervals, 'U' marks unreadable spots.
+    # True = keep, False = drop '~' marks quality-change intervals, 'U' marks unreadable spots.
     masks = [np.ones(n_samples, dtype=bool) for _ in range(n_channels)]
 
     # Signal-quality change intervals ('~')
@@ -73,7 +73,7 @@ def combine_keep_mask(masks, mode="all", channel=None):
         raise ValueError("mode must be 'all', 'any', or provide channel=int")
 
 def compact_and_reindex(signal, ann, keep_mask):
-    # Drop the masked-out samples and re-map the annotation indices onto the shortened signal
+    # Drop the masked samples and re-map the annotation indices onto the shortened signal
     keep_mask = np.asarray(keep_mask, dtype=bool)
     N = keep_mask.size
     keep_idx = np.flatnonzero(keep_mask)
@@ -104,19 +104,18 @@ bandpass_filter = scipy.signal.firwin(1001, [0.5, 40], pass_zero=False, fs=fs, w
 w, h = scipy.signal.freqz(bandpass_filter,fs)
 
 pre_proc_dir = "Preprocessed Dataset"
-#Save next to this script, not the current working directory
 dir = pathlib.Path(__file__).parent / pre_proc_dir
 dir.mkdir(parents=True, exist_ok=True)
 
-#Download the raw database once so we read from disk instead of re-streaming every run
+#Download the raw database once so we read from disk instead of streaming every run
 raw_dir = pathlib.Path(__file__).parent / "mitdb_raw"
 #Re-download only if any record's .dat is missing (handles interrupted downloads)
 have_all = all((raw_dir / f"{rec}.dat").exists() for rec in r_list)
 if not have_all:
-    print("Downloading mitdb (one-time)...")
+    print("Downloading mitdb database...")
     wfdb.dl_database('mitdb', str(raw_dir))
 
-#Record to draw the sanity-check plot for (visual spot-check)
+#Record to draw the sanity check plot for (visual spot-check)
 plot_rec = "100"
 plot_data = None
 
@@ -170,7 +169,7 @@ if plot_data is None:
     plot_data = (np.arange(sig.shape[0]) / fs, sig,
                  tbl["sample"].to_numpy(), tbl["symbol"].to_numpy(), names, plot_rec)
 
-#Quick sanity-check plot for one chosen record
+#Quick sanity check plot for one chosen record
 tx, x_compact, ann_idx_new, ann_sym_new, signal_names, record_name = plot_data
 
 #Zoom to a few seconds so individual beats are visible (a full 30-min record looks like a solid band)
